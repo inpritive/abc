@@ -9,12 +9,21 @@ export const connectDB = async () => {
   try {
     console.log(`[MongoDB] Attempting connection to ${uri}...`);
     await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 2500,
     });
     console.log('[MongoDB] Successfully connected to external/Docker MongoDB!');
   } catch (err) {
     console.warn('[MongoDB] Could not connect to external/Docker MongoDB. Falling back to mongodb-memory-server for instant out-of-the-box experience...');
-    mongoServer = await MongoMemoryServer.create();
+    try {
+      mongoServer = await MongoMemoryServer.create({
+        binary: {
+          version: '7.0.3',
+        },
+      });
+    } catch (createErr) {
+      console.warn('[MongoDB] Could not start MongoDB 7.0.3 binary, trying default version...');
+      mongoServer = await MongoMemoryServer.create();
+    }
     const memoryUri = mongoServer.getUri();
     await mongoose.connect(memoryUri, {
       dbName: 'procraft',
