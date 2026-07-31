@@ -136,7 +136,13 @@ router.post('/offline-sync', authenticate, requireSeller, async (req: AuthReques
       const processedItems = [];
 
       for (const item of bill.items) {
-        const product = await Product.findById(item.product);
+        let product = null;
+        try {
+          product = await Product.findById(item.product);
+        } catch (e) {
+          product = null;
+        }
+
         if (product) {
           product.stockQuantity = Math.max(0, product.stockQuantity - item.quantity);
           await product.save();
@@ -145,20 +151,25 @@ router.post('/offline-sync', authenticate, requireSeller, async (req: AuthReques
           if (product.stockQuantity <= product.lowStockThreshold) {
             notifyAdminLowStock(product).catch(() => {});
           }
-
-          totalAmount += product.price * item.quantity;
-          totalCost += product.costPrice * item.quantity;
-
-          processedItems.push({
-            product: product._id,
-            productName: product.name,
-            price: product.price,
-            costPrice: product.costPrice,
-            quantity: item.quantity,
-            unit: product.unit,
-          });
         }
+
+        totalAmount += Number(item.price || 0) * Number(item.quantity || 1);
+        totalCost += Number(item.costPrice || 0) * Number(item.quantity || 1);
+
+        processedItems.push({
+          product: product ? product._id : item.product,
+          productName: product ? product.name : item.productName || 'Walk-in Item',
+          price: product ? product.price : Number(item.price || 0),
+          costPrice: product ? product.costPrice : Number(item.costPrice || 0),
+          quantity: Number(item.quantity || 1),
+          unit: product ? product.unit : 'piece',
+        });
       }
+
+      const validMethods = ['COD', 'ONLINE', 'CASH', 'UPI', 'CARD'];
+      const paymentMethod = validMethods.includes(bill.paymentMethod)
+        ? bill.paymentMethod
+        : 'CASH';
 
       const orderNumber = bill.orderNumber || `POS-${Math.floor(100000 + Math.random() * 900000)}`;
 
@@ -169,7 +180,7 @@ router.post('/offline-sync', authenticate, requireSeller, async (req: AuthReques
         customerEmail: bill.customerEmail || 'walkin@procraft.shop',
         customerPhone: bill.customerPhone || '0000000000',
         shippingAddress: bill.shippingAddress || 'Counter Sale - Offline POS',
-        paymentMethod: bill.paymentMethod || 'COD',
+        paymentMethod,
         paymentStatus: 'PAID',
         orderStatus: 'DELIVERED',
         items: processedItems,

@@ -227,18 +227,37 @@ export const OfflinePOSTab: React.FC<OfflinePOSTabProps> = ({ onSyncCompleted })
 
         <div className="flex items-center gap-2">
           {offlineBills.length > 0 && (
-            <button
-              onClick={() => syncOfflineBills()}
-              disabled={isSyncing || !isOnline}
-              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-600/20 flex items-center gap-1.5 transition-all disabled:opacity-50"
-            >
-              <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-              <span>
-                {isSyncing
-                  ? 'Syncing to Server...'
-                  : `Sync Now (${offlineBills.length} pending)`}
-              </span>
-            </button>
+            <>
+              <button
+                onClick={() => syncOfflineBills()}
+                disabled={isSyncing || !isOnline}
+                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-600/20 flex items-center gap-1.5 transition-all disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                <span>
+                  {isSyncing
+                    ? 'Syncing to Server...'
+                    : `Sync Now (${offlineBills.length} pending)`}
+                </span>
+              </button>
+
+              <button
+                onClick={() => {
+                  if (window.confirm('Clear all pending offline bills from queue?')) {
+                    saveOfflineBills([]);
+                    setSyncMsg({
+                      type: 'success',
+                      text: 'Cleared offline bills queue.',
+                    });
+                    if (onSyncCompleted) onSyncCompleted();
+                  }
+                }}
+                className="bg-slate-800 hover:bg-red-900/40 text-slate-300 hover:text-red-400 text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-700 transition-all"
+                title="Clear unsynced bills from storage"
+              >
+                Clear Queue
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -272,7 +291,7 @@ export const OfflinePOSTab: React.FC<OfflinePOSTabProps> = ({ onSyncCompleted })
             <span className="text-xs text-slate-400">Works 100% Offline</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <label className="block text-[11px] font-bold text-slate-400 mb-1">
                 Customer Name
@@ -295,6 +314,21 @@ export const OfflinePOSTab: React.FC<OfflinePOSTabProps> = ({ onSyncCompleted })
                 onChange={(e) => setCustPhone(e.target.value)}
                 className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200"
               />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-slate-400 mb-1">
+                Payment Method
+              </label>
+              <select
+                value={paymentMode}
+                onChange={(e: any) => setPaymentMode(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200"
+              >
+                <option value="CASH">CASH</option>
+                <option value="UPI">UPI / QR Code</option>
+                <option value="CARD">Debit / Credit Card</option>
+              </select>
             </div>
           </div>
 

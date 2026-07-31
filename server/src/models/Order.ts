@@ -16,7 +16,7 @@ export interface IOrder extends Document {
   customerEmail: string;
   customerPhone: string;
   shippingAddress: string;
-  paymentMethod: 'COD' | 'ONLINE';
+  paymentMethod: 'COD' | 'ONLINE' | 'CASH' | 'UPI' | 'CARD';
   paymentStatus: 'PENDING' | 'PAID' | 'REFUNDED';
   orderStatus: 'PENDING' | 'PROCESSING' | 'OUT_FOR_DELIVERY' | 'DELIVERED' | 'CANCELLED';
   items: IOrderItem[];
@@ -46,7 +46,11 @@ const OrderSchema: Schema = new Schema(
     customerEmail: { type: String, required: true },
     customerPhone: { type: String, required: true },
     shippingAddress: { type: String, required: true },
-    paymentMethod: { type: String, enum: ['COD', 'ONLINE'], default: 'COD' },
+    paymentMethod: {
+      type: String,
+      enum: ['COD', 'ONLINE', 'CASH', 'UPI', 'CARD'],
+      default: 'COD',
+    },
     paymentStatus: { type: String, enum: ['PENDING', 'PAID', 'REFUNDED'], default: 'PENDING' },
     orderStatus: {
       type: String,
