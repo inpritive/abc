@@ -3,7 +3,7 @@ services:
     name: procraft-studio
     env: node
     plan: free
-    buildCommand: npm install --legacy-peer-deps && npm --prefix client install --legacy-peer-deps && npm --prefix server install --legacy-peer-deps && npm run build
+    buildCommand: npm install --include=dev --legacy-peer-deps && npm --prefix client install --include=dev --legacy-peer-deps && npm --prefix server install --include=dev --legacy-peer-deps && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
@@ -11,8 +11,12 @@ services:
         value: 20.14.0
       - key: NODE_OPTIONS
         value: "--max-old-space-size=4096"
+      - key: NPM_CONFIG_PRODUCTION
+        value: "false"
+      - key: NPM_CONFIG_INCLUDE
+        value: "dev"
       - key: NPM_CONFIG_LEGACY_PEER_DEPS
-        value: true
+        value: "true"
       - key: NODE_ENV
         value: production
       - key: PORT
