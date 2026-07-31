@@ -1,8 +1,15 @@
 import express, { Request, Response } from 'express';
 import Order from '../models/Order';
 import Product from '../models/Product';
+import Coupon from '../models/Coupon';
 import { authenticate, requireSeller, AuthRequest } from '../middleware/auth';
 import { emitStockUpdate, emitOrderCreated, emitOrderUpdated } from '../socket/socket';
+import {
+  notifyCustomerOrderPlaced,
+  notifyCustomerOrderStatus,
+  notifyAdminNewOrder,
+  notifyAdminLowStock,
+} from '../services/notification.service';
 
 const router = express.Router();
 
@@ -16,6 +23,8 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response): Promise<
       shippingAddress,
       paymentMethod,
       items,
+      couponCode,
+      discountAmount,
     } = req.body;
 
     if (!items || !items.length) {
@@ -48,6 +57,11 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response): Promise<
       // Emit live Socket.IO stock update to all connected tabs!
       emitStockUpdate(product._id.toString(), product.stockQuantity);
 
+      // Check low stock threshold alert
+      if (product.stockQuantity <= product.lowStockThreshold) {
+        notifyAdminLowStock(product).catch(() => {});
+      }
+
       totalAmount += product.price * item.quantity;
       totalCost += product.costPrice * item.quantity;
 
@@ -59,6 +73,17 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response): Promise<
         quantity: item.quantity,
         unit: product.unit,
       });
+    }
+
+    // Apply discount amount if valid
+    const finalDiscount = Number(discountAmount || 0);
+    const finalTotalAmount = Math.max(0, totalAmount - finalDiscount);
+
+    if (couponCode) {
+      await Coupon.findOneAndUpdate(
+        { code: String(couponCode).toUpperCase().trim() },
+        { $inc: { usedCount: 1 } }
+      );
     }
 
     const orderNumber = `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
@@ -74,14 +99,98 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response): Promise<
       paymentStatus: paymentMethod === 'ONLINE' ? 'PAID' : 'PENDING',
       orderStatus: 'PENDING',
       items: processedItems,
-      totalAmount,
+      totalAmount: finalTotalAmount,
       totalCost,
+      couponCode: couponCode || '',
+      discountAmount: finalDiscount,
+      isOfflineBill: false,
     });
 
     // Broadcast new order to Seller Dashboard in real-time
     emitOrderCreated(newOrder);
 
+    // Trigger customer & admin notifications
+    notifyCustomerOrderPlaced(newOrder).catch(() => {});
+    notifyAdminNewOrder(newOrder).catch(() => {});
+
     res.status(201).json({ success: true, order: newOrder });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/orders/offline-sync (Seller only - Sync Offline Walk-in Bills)
+router.post('/offline-sync', authenticate, requireSeller, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { bills } = req.body;
+    if (!bills || !Array.isArray(bills) || bills.length === 0) {
+      res.status(400).json({ success: false, message: 'No offline bills provided to sync.' });
+      return;
+    }
+
+    const createdOrders = [];
+
+    for (const bill of bills) {
+      let totalAmount = 0;
+      let totalCost = 0;
+      const processedItems = [];
+
+      for (const item of bill.items) {
+        const product = await Product.findById(item.product);
+        if (product) {
+          product.stockQuantity = Math.max(0, product.stockQuantity - item.quantity);
+          await product.save();
+          emitStockUpdate(product._id.toString(), product.stockQuantity);
+
+          if (product.stockQuantity <= product.lowStockThreshold) {
+            notifyAdminLowStock(product).catch(() => {});
+          }
+
+          totalAmount += product.price * item.quantity;
+          totalCost += product.costPrice * item.quantity;
+
+          processedItems.push({
+            product: product._id,
+            productName: product.name,
+            price: product.price,
+            costPrice: product.costPrice,
+            quantity: item.quantity,
+            unit: product.unit,
+          });
+        }
+      }
+
+      const orderNumber = bill.orderNumber || `POS-${Math.floor(100000 + Math.random() * 900000)}`;
+
+      const newOrder = await Order.create({
+        orderNumber,
+        user: req.user?._id,
+        customerName: bill.customerName || 'Walk-in Customer',
+        customerEmail: bill.customerEmail || 'walkin@procraft.shop',
+        customerPhone: bill.customerPhone || '0000000000',
+        shippingAddress: bill.shippingAddress || 'Counter Sale - Offline POS',
+        paymentMethod: bill.paymentMethod || 'COD',
+        paymentStatus: 'PAID',
+        orderStatus: 'DELIVERED',
+        items: processedItems,
+        totalAmount: bill.totalAmount || totalAmount,
+        totalCost,
+        couponCode: bill.couponCode || '',
+        discountAmount: bill.discountAmount || 0,
+        isOfflineBill: true,
+        createdAt: bill.createdAt ? new Date(bill.createdAt) : new Date(),
+      });
+
+      emitOrderCreated(newOrder);
+      createdOrders.push(newOrder);
+    }
+
+    res.json({
+      success: true,
+      count: createdOrders.length,
+      orders: createdOrders,
+      message: `Successfully synced ${createdOrders.length} offline bill(s) to inventory & sales ledger.`,
+    });
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -158,6 +267,9 @@ router.put('/:id/status', authenticate, requireSeller, async (req: AuthRequest, 
 
     // Emit real-time order update to customer tracking page and seller dashboard
     emitOrderUpdated(order);
+
+    // Trigger status update SMS/WhatsApp alert
+    notifyCustomerOrderStatus(order).catch(() => {});
 
     res.json({ success: true, order });
   } catch (err: any) {

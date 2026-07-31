@@ -15,10 +15,9 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
 }) => {
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState<
-    'STOCK_PURCHASE' | 'LOGISTICS' | 'UTILITIES' | 'SALARY' | 'OTHER'
-  >('STOCK_PURCHASE');
+  const [category, setCategory] = useState<any>('STOCK_PURCHASE');
   const [notes, setNotes] = useState('');
+  const [expenseDate, setExpenseDate] = useState(new Date().toISOString().split('T')[0]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -45,6 +44,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           amount: Number(amount),
           category,
           notes,
+          expenseDate,
         }),
       });
 
@@ -66,12 +66,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Record Shop Expense / Stock Purchase"
-      maxWidth="max-w-md"
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title="Record Shop Expense / Purchase" maxWidth="max-w-lg">
       <form onSubmit={handleSubmit} className="space-y-4">
         {errorMsg && (
           <div className="p-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-400 text-xs font-semibold">
@@ -88,7 +83,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
             required
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. Bulk Paint Delivery from Asian Paints"
+            placeholder="e.g. Shop Rent / Asian Paints Bulk Delivery"
             className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100"
           />
         </div>
@@ -115,22 +110,17 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
             </label>
             <select
               value={category}
-              onChange={(e) =>
-                setCategory(
-                  e.target.value as
-                    | 'STOCK_PURCHASE'
-                    | 'LOGISTICS'
-                    | 'UTILITIES'
-                    | 'SALARY'
-                    | 'OTHER'
-                )
-              }
+              onChange={(e) => setCategory(e.target.value)}
               className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100"
             >
               <option value="STOCK_PURCHASE">Stock Purchase</option>
-              <option value="LOGISTICS">Logistics & Freight</option>
+              <option value="RENT">Shop Rent</option>
+              <option value="ELECTRICITY">Electricity & Power</option>
+              <option value="SALARY">Staff Salaries</option>
+              <option value="TRANSPORT">Transport & Freight</option>
+              <option value="LOGISTICS">Logistics & Delivery</option>
               <option value="UTILITIES">Showroom Utilities</option>
-              <option value="SALARY">Staff Salary</option>
+              <option value="MISC">Miscellaneous</option>
               <option value="OTHER">Other Expense</option>
             </select>
           </div>
@@ -138,29 +128,42 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
 
         <div>
           <label className="block text-xs font-bold text-slate-300 mb-1">
-            Notes / Invoice Ref
+            Expense Date *
+          </label>
+          <input
+            type="date"
+            required
+            value={expenseDate}
+            onChange={(e) => setExpenseDate(e.target.value)}
+            className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold text-slate-300 mb-1">
+            Notes / Invoice Reference
           </label>
           <textarea
             rows={2}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Optional vendor reference, invoice number..."
+            placeholder="Invoice number, payment method, supplier name..."
             className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100"
           />
         </div>
 
-        <div className="flex justify-end gap-3 pt-2">
+        <div className="flex justify-end gap-2 pt-2">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl border border-slate-700 text-xs font-semibold text-slate-300 hover:bg-slate-800"
+            className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-bold"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-5 py-2 rounded-xl bg-primary-600 hover:bg-primary-500 text-white text-xs font-bold shadow-lg shadow-primary-600/30"
+            className="px-6 py-2 rounded-xl bg-gradient-to-r from-primary-600 to-amber-600 hover:from-primary-500 hover:to-amber-500 text-white text-xs font-extrabold shadow-lg shadow-primary-600/30 disabled:opacity-50"
           >
             {isSubmitting ? 'Recording...' : 'Record Expense'}
           </button>

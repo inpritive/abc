@@ -22,6 +22,9 @@ export interface IOrder extends Document {
   items: IOrderItem[];
   totalAmount: number;
   totalCost: number;
+  couponCode?: string;
+  discountAmount?: number;
+  isOfflineBill?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -53,6 +56,9 @@ const OrderSchema: Schema = new Schema(
     items: [OrderItemSchema],
     totalAmount: { type: Number, required: true },
     totalCost: { type: Number, required: true },
+    couponCode: { type: String, default: '' },
+    discountAmount: { type: Number, default: 0 },
+    isOfflineBill: { type: Boolean, default: false },
   },
   {
     timestamps: true,

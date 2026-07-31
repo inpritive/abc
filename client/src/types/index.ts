@@ -60,6 +60,9 @@ export interface Order {
   items: OrderItem[];
   totalAmount: number;
   totalCost: number;
+  couponCode?: string;
+  discountAmount?: number;
+  isOfflineBill?: boolean;
   createdAt: string;
 }
 
@@ -67,8 +70,19 @@ export interface Expense {
   _id: string;
   title: string;
   amount: number;
-  category: 'STOCK_PURCHASE' | 'LOGISTICS' | 'UTILITIES' | 'SALARY' | 'OTHER';
+  category:
+    | 'RENT'
+    | 'ELECTRICITY'
+    | 'SALARY'
+    | 'TRANSPORT'
+    | 'STOCK_PURCHASE'
+    | 'LOGISTICS'
+    | 'UTILITIES'
+    | 'MISC'
+    | 'OTHER';
   notes: string;
+  expenseDate?: string;
+  receiptPhoto?: string;
   createdAt: string;
 }
 
@@ -112,3 +126,76 @@ export interface CRMCustomer {
   lastOrder: string;
   joinedAt: string;
 }
+
+export interface Coupon {
+  _id: string;
+  code: string;
+  discountType: 'FIXED' | 'PERCENTAGE';
+  discountValue: number;
+  startDate: string;
+  endDate: string;
+  minOrderValue: number;
+  usageLimitTotal: number;
+  usageLimitPerCustomer: number;
+  usedCount: number;
+  applicableCategories: string[];
+  isActive: boolean;
+}
+
+export interface Supplier {
+  _id: string;
+  name: string;
+  phone: string;
+  address: string;
+  itemsSupplied: string[];
+  outstandingBalance: number;
+}
+
+export interface POItem {
+  product: string;
+  productName: string;
+  quantity: number;
+  unitCost: number;
+}
+
+export interface PurchaseOrder {
+  _id: string;
+  poNumber: string;
+  supplier: string;
+  supplierName: string;
+  items: POItem[];
+  totalAmount: number;
+  amountPaid: number;
+  status: 'PENDING' | 'RECEIVED' | 'CANCELLED';
+  receivedAt?: string;
+  billImage?: string;
+  createdAt: string;
+}
+
+export interface NotificationLogItem {
+  timestamp: string;
+  recipient: string;
+  channel: 'SMS' | 'WHATSAPP';
+  message: string;
+  status: 'SENT' | 'FAILED' | 'SIMULATED';
+  provider: string;
+}
+
+export interface NotificationSetting {
+  _id: string;
+  smsOrderPlaced: boolean;
+  smsOrderStatusChanged: boolean;
+  smsNewOrderAdmin: boolean;
+  smsLowStockAdmin: boolean;
+  whatsappOrderPlaced: boolean;
+  whatsappOrderStatusChanged: boolean;
+  whatsappNewOrderAdmin: boolean;
+  whatsappLowStockAdmin: boolean;
+  provider: 'TWILIO' | 'GUPSHUP' | 'META' | 'SIMULATED';
+  apiKey: string;
+  apiSecret: string;
+  senderPhone: string;
+  adminPhone: string;
+  notificationLog: NotificationLogItem[];
+}
+

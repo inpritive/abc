@@ -1,11 +1,25 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
+export type ExpenseCategory =
+  | 'RENT'
+  | 'ELECTRICITY'
+  | 'SALARY'
+  | 'TRANSPORT'
+  | 'STOCK_PURCHASE'
+  | 'LOGISTICS'
+  | 'UTILITIES'
+  | 'MISC'
+  | 'OTHER';
+
 export interface IExpense extends Document {
   title: string;
   amount: number;
-  category: 'STOCK_PURCHASE' | 'LOGISTICS' | 'UTILITIES' | 'SALARY' | 'OTHER';
+  category: ExpenseCategory;
   notes: string;
+  expenseDate: Date;
+  receiptPhoto?: string;
   createdAt: Date;
+  updatedAt: Date;
 }
 
 const ExpenseSchema: Schema = new Schema(
@@ -14,10 +28,22 @@ const ExpenseSchema: Schema = new Schema(
     amount: { type: Number, required: true },
     category: {
       type: String,
-      enum: ['STOCK_PURCHASE', 'LOGISTICS', 'UTILITIES', 'SALARY', 'OTHER'],
-      default: 'STOCK_PURCHASE',
+      enum: [
+        'RENT',
+        'ELECTRICITY',
+        'SALARY',
+        'TRANSPORT',
+        'STOCK_PURCHASE',
+        'LOGISTICS',
+        'UTILITIES',
+        'MISC',
+        'OTHER',
+      ],
+      default: 'OTHER',
     },
     notes: { type: String, default: '' },
+    expenseDate: { type: Date, default: Date.now },
+    receiptPhoto: { type: String },
   },
   {
     timestamps: true,

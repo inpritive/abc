@@ -5,6 +5,10 @@ import Category from '../models/Category';
 import Product from '../models/Product';
 import Order from '../models/Order';
 import Expense from '../models/Expense';
+import Coupon from '../models/Coupon';
+import Supplier from '../models/Supplier';
+import PurchaseOrder from '../models/PurchaseOrder';
+import NotificationSetting from '../models/NotificationSetting';
 
 export const seedData = async () => {
   console.log('[Seed] Clearing existing data...');
@@ -14,6 +18,10 @@ export const seedData = async () => {
     Product.deleteMany({}),
     Order.deleteMany({}),
     Expense.deleteMany({}),
+    Coupon.deleteMany({}),
+    Supplier.deleteMany({}),
+    PurchaseOrder.deleteMany({}),
+    NotificationSetting.deleteMany({}),
   ]);
 
   console.log('[Seed] Creating users...');
@@ -527,6 +535,149 @@ export const seedData = async () => {
       createdAt: day3,
     },
   ]);
+
+  console.log('[Seed] Creating demo Coupons, Suppliers, Purchase Orders & Notification Settings...');
+  await Coupon.create([
+    {
+      code: 'FLAT500',
+      discountType: 'FIXED',
+      discountValue: 500,
+      startDate: new Date(),
+      endDate: new Date(Date.now() + 30 * 24 * 3600 * 1000),
+      minOrderValue: 3000,
+      usageLimitTotal: 100,
+      usageLimitPerCustomer: 2,
+      usedCount: 5,
+      applicableCategories: ['all'],
+      isActive: true,
+    },
+    {
+      code: 'PAINT10',
+      discountType: 'PERCENTAGE',
+      discountValue: 10,
+      startDate: new Date(),
+      endDate: new Date(Date.now() + 30 * 24 * 3600 * 1000),
+      minOrderValue: 1000,
+      usageLimitTotal: 50,
+      usageLimitPerCustomer: 1,
+      usedCount: 2,
+      applicableCategories: ['paint'],
+      isActive: true,
+    },
+    {
+      code: 'WELCOME200',
+      discountType: 'FIXED',
+      discountValue: 200,
+      startDate: new Date(),
+      endDate: new Date(Date.now() + 60 * 24 * 3600 * 1000),
+      minOrderValue: 500,
+      usageLimitTotal: 500,
+      usageLimitPerCustomer: 1,
+      usedCount: 18,
+      applicableCategories: ['all'],
+      isActive: true,
+    },
+  ]);
+
+  const [sup1, sup2, sup3] = await Supplier.create([
+    {
+      name: 'Asian Paints & Coatings Depot',
+      phone: '+91 80 2345 6789',
+      address: 'Industrial Area, Peenya, Bangalore',
+      itemsSupplied: ['paint'],
+      outstandingBalance: 12500,
+    },
+    {
+      name: 'Bosch & DeWalt Industrial Tools Ltd',
+      phone: '+91 80 8765 4321',
+      address: 'Whitefield Commercial Hub, Bangalore',
+      itemsSupplied: ['tools', 'hardware'],
+      outstandingBalance: 35000,
+    },
+    {
+      name: 'Finolex & Anchor Electrical Wholesalers',
+      phone: '+91 80 5544 3322',
+      address: 'SP Road Wholesale Market, Bangalore',
+      itemsSupplied: ['electrical', 'plumbing'],
+      outstandingBalance: 0,
+    },
+  ]);
+
+  await PurchaseOrder.create([
+    {
+      poNumber: 'PO-2026-101',
+      supplier: sup1._id,
+      supplierName: sup1.name,
+      items: [
+        {
+          product: products[0]._id,
+          productName: products[0].name,
+          quantity: 15,
+          unitCost: products[0].costPrice,
+        },
+      ],
+      totalAmount: 15 * products[0].costPrice,
+      amountPaid: 15 * products[0].costPrice - 12500,
+      status: 'RECEIVED',
+      receivedAt: new Date(),
+    },
+    {
+      poNumber: 'PO-2026-102',
+      supplier: sup2._id,
+      supplierName: sup2.name,
+      items: [
+        {
+          product: products[1]._id,
+          productName: products[1].name,
+          quantity: 10,
+          unitCost: products[1].costPrice,
+        },
+      ],
+      totalAmount: 10 * products[1].costPrice,
+      amountPaid: 0,
+      status: 'PENDING',
+    },
+  ]);
+
+  await NotificationSetting.create({
+    smsOrderPlaced: true,
+    smsOrderStatusChanged: true,
+    smsNewOrderAdmin: true,
+    smsLowStockAdmin: true,
+    whatsappOrderPlaced: true,
+    whatsappOrderStatusChanged: true,
+    whatsappNewOrderAdmin: true,
+    whatsappLowStockAdmin: true,
+    provider: 'SIMULATED',
+    senderPhone: '+91 98765 43210',
+    adminPhone: '+91 98765 43210',
+    notificationLog: [
+      {
+        timestamp: new Date(Date.now() - 3600 * 1000),
+        recipient: '+91 98123 45678',
+        channel: 'WHATSAPP',
+        message: 'ProCraft Order Confirmed! Your Order #ORD-849201 for Rs.14,250 has been placed successfully.',
+        status: 'SIMULATED',
+        provider: 'SIMULATED',
+      },
+      {
+        timestamp: new Date(Date.now() - 7200 * 1000),
+        recipient: '+91 98765 43210',
+        channel: 'SMS',
+        message: '[ADMIN ALERT] New Order Received! #ORD-849201 placed by John Verma for Rs.14,250.',
+        status: 'SIMULATED',
+        provider: 'SIMULATED',
+      },
+      {
+        timestamp: new Date(Date.now() - 10800 * 1000),
+        recipient: '+91 91234 56789',
+        channel: 'WHATSAPP',
+        message: 'ProCraft Order Status Update: Order #ORD-771239 status is now DELIVERED.',
+        status: 'SIMULATED',
+        provider: 'SIMULATED',
+      },
+    ],
+  });
 
   console.log('[Seed] Database seeding completed successfully! ✨');
 };

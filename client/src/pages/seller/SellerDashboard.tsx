@@ -7,6 +7,10 @@ import { OrdersTab } from './OrdersTab';
 import { ReportsTab } from './ReportsTab';
 import { CRMTab } from './CRMTab';
 import { ExpensesTab } from './ExpensesTab';
+import { CouponsTab } from './CouponsTab';
+import { SuppliersTab } from './SuppliersTab';
+import { OfflinePOSTab } from './OfflinePOSTab';
+import { NotificationSettingsTab } from './NotificationSettingsTab';
 
 import { ProductFormModal } from '../../components/seller/ProductFormModal';
 import { BulkStockModal } from '../../components/seller/BulkStockModal';
@@ -26,6 +30,7 @@ export const SellerDashboard: React.FC<SellerDashboardProps> = ({ onNavigate }) 
   const [currentTab, setCurrentTab] = useState('overview');
   const [categories, setCategories] = useState<Category[]>([]);
   const [lowStockCount, setLowStockCount] = useState(0);
+  const [pendingSyncCount, setPendingSyncCount] = useState(0);
 
   // Modals state
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -61,30 +66,36 @@ export const SellerDashboard: React.FC<SellerDashboardProps> = ({ onNavigate }) 
           setLowStockCount(lowCount);
         }
       } catch (err) {
-        console.error('Error loading seller dashboard meta:', err);
+        console.error('Error fetching dashboard metadata:', err);
       }
     };
-    fetchMeta();
-  }, []);
 
-  // Update lowStockCount dynamically if stock updates via Socket.IO
-  useEffect(() => {
+    fetchMeta();
+
     const unsubscribe = onStockUpdated(() => {
-      // Re-fetch low stock count silently
-      fetch('/api/products')
-        .then((r) => r.json())
-        .then((d) => {
-          if (d.products) {
-            const count = d.products.filter(
-              (p: Product) => p.stockQuantity <= p.lowStockThreshold
-            ).length;
-            setLowStockCount(count);
-          }
-        })
-        .catch(() => {});
+      fetchMeta();
     });
-    return () => unsubscribe();
+
+    return () => {
+      unsubscribe();
+    };
   }, [onStockUpdated]);
+
+  // Track offline unsynced POS bills
+  useEffect(() => {
+    const checkOffline = () => {
+      try {
+        const stored = localStorage.getItem('procraft_offline_bills');
+        const bills = stored ? JSON.parse(stored) : [];
+        setPendingSyncCount(bills.length);
+      } catch {
+        setPendingSyncCount(0);
+      }
+    };
+    checkOffline();
+    const intv = setInterval(checkOffline, 3000);
+    return () => clearInterval(intv);
+  }, []);
 
   const handleOpenProductModal = (product?: Product | null) => {
     setSelectedProductForEdit(product || null);
@@ -114,6 +125,7 @@ export const SellerDashboard: React.FC<SellerDashboardProps> = ({ onNavigate }) 
           currentTab={currentTab}
           onTabChange={setCurrentTab}
           lowStockCount={lowStockCount}
+          pendingSyncCount={pendingSyncCount}
         />
 
         <main className="flex-1 p-6 md:p-8 overflow-y-auto">
@@ -143,6 +155,20 @@ export const SellerDashboard: React.FC<SellerDashboardProps> = ({ onNavigate }) 
           {currentTab === 'expenses' && (
             <ExpensesTab onOpenExpenseModal={() => setIsExpenseModalOpen(true)} />
           )}
+
+          {currentTab === 'coupons' && <CouponsTab />}
+
+          {currentTab === 'suppliers' && <SuppliersTab />}
+
+          {currentTab === 'offline' && (
+            <OfflinePOSTab
+              onSyncCompleted={() => {
+                setPendingSyncCount(0);
+              }}
+            />
+          )}
+
+          {currentTab === 'settings' && <NotificationSettingsTab />}
         </main>
       </div>
 

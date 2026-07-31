@@ -15,6 +15,10 @@ import productRoutes from './routes/products.routes';
 import orderRoutes from './routes/orders.routes';
 import analyticsRoutes from './routes/analytics.routes';
 import expenseRoutes from './routes/expenses.routes';
+import couponRoutes from './routes/coupons.routes';
+import supplierRoutes from './routes/suppliers.routes';
+import purchaseOrderRoutes from './routes/purchaseOrders.routes';
+import notificationRoutes from './routes/notifications.routes';
 
 dotenv.config();
 
@@ -35,6 +39,10 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/expenses', expenseRoutes);
+app.use('/api/coupons', couponRoutes);
+app.use('/api/suppliers', supplierRoutes);
+app.use('/api/purchase-orders', purchaseOrderRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

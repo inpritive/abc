@@ -6,19 +6,24 @@ import {
   BarChart3,
   Users,
   DollarSign,
-  AlertTriangle,
+  Tag,
+  Truck,
+  WifiOff,
+  Bell,
 } from 'lucide-react';
 
 interface SellerSidebarProps {
   currentTab: string;
   onTabChange: (tab: string) => void;
   lowStockCount: number;
+  pendingSyncCount?: number;
 }
 
 export const SellerSidebar: React.FC<SellerSidebarProps> = ({
   currentTab,
   onTabChange,
   lowStockCount,
+  pendingSyncCount = 0,
 }) => {
   const tabs = [
     { id: 'overview', label: 'Dashboard Overview', icon: LayoutDashboard },
@@ -32,6 +37,16 @@ export const SellerSidebar: React.FC<SellerSidebarProps> = ({
     { id: 'reports', label: 'Sales & Valuation', icon: BarChart3 },
     { id: 'crm', label: 'Customer CRM', icon: Users },
     { id: 'expenses', label: 'Profit & Expenses', icon: DollarSign },
+    { id: 'coupons', label: 'Discounts & Coupons', icon: Tag },
+    { id: 'suppliers', label: 'Suppliers & POs', icon: Truck },
+    {
+      id: 'offline',
+      label: 'Offline POS Billing',
+      icon: WifiOff,
+      badge: pendingSyncCount > 0 ? pendingSyncCount : undefined,
+      badgeColor: 'bg-amber-500 text-slate-950',
+    },
+    { id: 'settings', label: 'Notification Settings', icon: Bell },
   ];
 
   return (
@@ -40,7 +55,7 @@ export const SellerSidebar: React.FC<SellerSidebarProps> = ({
         <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
           Admin Management
         </div>
-        {tabs.map((tab) => {
+        {tabs.map((tab: any) => {
           const Icon = tab.icon;
           const isActive = currentTab === tab.id;
           return (
@@ -58,7 +73,14 @@ export const SellerSidebar: React.FC<SellerSidebarProps> = ({
                 <span>{tab.label}</span>
               </div>
               {tab.badge !== undefined && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/20 text-amber-400 border border-amber-500/40">
+                <span
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                    tab.badgeColor ||
+                    (isActive
+                      ? 'bg-white/20 text-white'
+                      : 'bg-red-500/20 text-red-400 border border-red-500/30')
+                  }`}
+                >
                   {tab.badge}
                 </span>
               )}
@@ -67,14 +89,11 @@ export const SellerSidebar: React.FC<SellerSidebarProps> = ({
         })}
       </div>
 
-      <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 text-xs space-y-1.5">
-        <div className="font-bold text-slate-300 flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-          <span>Real-Time Sync Active</span>
+      <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/60 mt-4">
+        <div className="text-[11px] font-bold text-slate-300">Enterprise ERP & POS</div>
+        <div className="text-[10px] text-slate-500 mt-0.5">
+          Real-time Socket.IO + AI OCR + Offline Billing enabled
         </div>
-        <p className="text-[11px] text-slate-400">
-          Stock and order updates broadcast instantly to customer tabs via Socket.IO.
-        </p>
       </div>
     </aside>
   );
