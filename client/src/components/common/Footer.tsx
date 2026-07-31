@@ -1,7 +1,11 @@
 import React from 'react';
 import { Wrench, Mail, Phone, MapPin, Shield, Truck, RefreshCw } from 'lucide-react';
 
-export const Footer: React.FC = () => {
+interface FooterProps {
+  onNavigate?: (view: string, param?: any) => void;
+}
+
+export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   return (
     <footer className="border-t border-slate-800/80 bg-slate-950 text-slate-400">
       {/* Features bar */}
@@ -55,11 +59,54 @@ export const Footer: React.FC = () => {
             Categories
           </h4>
           <ul className="space-y-2 text-xs">
-            <li><a href="#paint" className="hover:text-primary-400 transition-colors">Paint & Wood Care</a></li>
-            <li><a href="#tools" className="hover:text-primary-400 transition-colors">Power & Hand Tools</a></li>
-            <li><a href="#hardware" className="hover:text-primary-400 transition-colors">Hardware & Fasteners</a></li>
-            <li><a href="#electrical" className="hover:text-primary-400 transition-colors">Electrical & Wiring</a></li>
-            <li><a href="#plumbing" className="hover:text-primary-400 transition-colors">Plumbing & Pipes</a></li>
+            <li>
+              <button
+                onClick={() => onNavigate?.('shop', { category: 'paint' })}
+                className="hover:text-primary-400 transition-colors text-left"
+              >
+                Paint & Wood Care
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => onNavigate?.('shop', { category: 'tools' })}
+                className="hover:text-primary-400 transition-colors text-left"
+              >
+                Power & Hand Tools
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => onNavigate?.('shop', { category: 'hardware' })}
+                className="hover:text-primary-400 transition-colors text-left"
+              >
+                Hardware & Fasteners
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => onNavigate?.('shop', { category: 'electrical' })}
+                className="hover:text-primary-400 transition-colors text-left"
+              >
+                Electrical & Wiring
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => onNavigate?.('shop', { category: 'plumbing' })}
+                className="hover:text-primary-400 transition-colors text-left"
+              >
+                Plumbing & Pipes
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => onNavigate?.('shop', { category: 'safety' })}
+                className="hover:text-primary-400 transition-colors text-left"
+              >
+                Safety & Workwear
+              </button>
+            </li>
           </ul>
         </div>
 
@@ -68,10 +115,38 @@ export const Footer: React.FC = () => {
             Customer Care
           </h4>
           <ul className="space-y-2 text-xs">
-            <li><a href="#" className="hover:text-primary-400 transition-colors">Order History & Tracking</a></li>
-            <li><a href="#" className="hover:text-primary-400 transition-colors">Shipping & Returns</a></li>
-            <li><a href="#" className="hover:text-primary-400 transition-colors">Bulk Order Queries</a></li>
-            <li><a href="#" className="hover:text-primary-400 transition-colors">Color Matching Studio</a></li>
+            <li>
+              <button
+                onClick={() => onNavigate?.('my-orders')}
+                className="hover:text-primary-400 transition-colors text-left"
+              >
+                Order History & Tracking
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => onNavigate?.('shop')}
+                className="hover:text-primary-400 transition-colors text-left"
+              >
+                Shipping & Returns
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => onNavigate?.('shop')}
+                className="hover:text-primary-400 transition-colors text-left"
+              >
+                Bulk Order Queries
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => onNavigate?.('shop', { category: 'paint' })}
+                className="hover:text-primary-400 transition-colors text-left"
+              >
+                Color Matching Studio
+              </button>
+            </li>
           </ul>
         </div>
 

@@ -139,7 +139,7 @@ const AppContent: React.FC = () => {
       </main>
 
       {/* Render Customer Footer unless in Seller Dashboard view */}
-      {currentView !== 'seller-dashboard' && <Footer />}
+      {currentView !== 'seller-dashboard' && <Footer onNavigate={handleNavigate} />}
     </div>
   );
 };

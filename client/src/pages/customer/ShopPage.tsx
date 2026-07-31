@@ -103,6 +103,20 @@ export const ShopPage: React.FC<ShopPageProps> = ({ initialFilter, onNavigate })
     sortBy,
   ]);
 
+  // Sync selectedCategory and search when initialFilter prop changes (e.g., clicking footer category or navbar search)
+  useEffect(() => {
+    if (initialFilter?.category !== undefined) {
+      setSelectedCategory(initialFilter.category);
+    } else {
+      setSelectedCategory('all');
+    }
+    if (initialFilter?.search !== undefined) {
+      setSearch(initialFilter.search);
+    } else {
+      setSearch('');
+    }
+  }, [initialFilter]);
+
   // Real-time stock & product updates
   useEffect(() => {
     const unsubscribeStock = onStockUpdated(({ productId, stockQuantity }) => {
