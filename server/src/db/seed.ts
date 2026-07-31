@@ -6,10 +6,7 @@ import Product from '../models/Product';
 import Order from '../models/Order';
 import Expense from '../models/Expense';
 
-const seedDatabase = async () => {
-  console.log('[Seed] Connecting to database...');
-  await connectDB();
-
+export const seedData = async () => {
   console.log('[Seed] Clearing existing data...');
   await Promise.all([
     User.deleteMany({}),
@@ -532,10 +529,15 @@ const seedDatabase = async () => {
   ]);
 
   console.log('[Seed] Database seeding completed successfully! ✨');
-  await disconnectDB();
 };
 
-seedDatabase().catch((err) => {
-  console.error('[Seed] Error seeding database:', err);
-  process.exit(1);
-});
+if (require.main === module) {
+  (async () => {
+    await connectDB();
+    await seedData();
+    await disconnectDB();
+  })().catch((err) => {
+    console.error('[Seed] Error seeding database:', err);
+    process.exit(1);
+  });
+}

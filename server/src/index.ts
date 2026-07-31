@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 import { connectDB } from './db/mongo';
+import User from './models/User';
+import { seedData } from './db/seed';
 import { initSocket } from './socket/socket';
 import { errorHandler } from './middleware/error';
 
@@ -72,6 +74,19 @@ const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   await connectDB();
+
+  // Auto-seed demo database if empty so demo login works out-of-the-box!
+  try {
+    const userCount = await User.countDocuments();
+    if (userCount === 0) {
+      console.log('[Server] Empty database detected. Auto-seeding demo users, products, orders, and expenses...');
+      await seedData();
+      console.log('[Server] Auto-seeding complete! Demo Login is ready.');
+    }
+  } catch (seedErr) {
+    console.error('[Server] Could not auto-seed database:', seedErr);
+  }
+
   httpServer.listen(PORT, () => {
     console.log(`[Server] ProCraft Backend running on port ${PORT}`);
   });
